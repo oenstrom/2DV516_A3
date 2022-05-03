@@ -1,8 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.svm import SVC
-from sklearn.model_selection import GridSearchCV, PredefinedSplit
-
 
 def main():
     """"""
@@ -12,77 +10,53 @@ def main():
     X_train, y_train = X[:train_stop, :], y[:train_stop]
     X_vali, y_vali = X[train_stop:, :], y[train_stop:]
 
-    lin = SVC(kernel="linear")
-    poly = SVC(kernel="poly")
-    rbf = SVC(kernel="rbf")
+    kernels = {
+        "linear": {"C": [0.001, 0.01, 0.1, 1, 2, 3, 4, 5, 10, 50, 100, 200]},
+        "rbf": {"C": [0.001, 0.01, 0.1, 1, 2, 3, 4, 5, 10, 50, 100, 200], "gamma": [0.001, 0.01, 0.05, 0.075, 0.1, 0.5, 0.75, 1, 5, 10, 100]},
+        "poly": {"degree": [2, 3, 4, 5, 6], "C": [0.01, 0.1, 1, 10], "gamma": [0.01, 0.05, 0.075, 0.1]}
+    }
 
-    lin.fit(X_train, y_train)
-    poly.fit(X_train, y_train)
-    rbf.fit(X_train, y_train)
+    # Grid search
+    for kernel, params in kernels.items():
+        best_score = 0
+        for degree in params.get("degree", [1]):
+            for C in params.get("C", [1]):
+                for gamma in params.get("gamma", [1]):
+                    clf = SVC(kernel=kernel, degree=degree, C=C, gamma=gamma)
+                    score = clf.fit(X_train, y_train).score(X_vali, y_vali)
+                    if score > best_score:
+                        best_score = score
+                        params["best"] = clf
 
-    print("Lin Errors:", lin.score(X_vali, y_vali))
-    print("Pol Errors:", poly.score(X_vali, y_vali))
-    print("RBF Errors:", rbf.score(X_vali, y_vali))
+    margin = 1
+    grid_size = 500
+    x_min, x_max = min(X[:, 0]) - margin, max(X[:, 0]) + margin
+    y_min, y_max = min(X[:, 1]) - margin, max(X[:, 1]) + margin
+    xx, yy = np.meshgrid(np.linspace(x_min, x_max, grid_size), np.linspace(y_min, y_max, grid_size))
+    grid = np.c_[xx.ravel(), yy.ravel()]
 
-    C_list = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
-    C_list = [0.001, 0.005, 0.01, 0.05, 0.075, 0.1, 0.5, 1, 5, 10, 50, 100, 150, 250, 500, 1000]
-    # C_list = [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 5, 10, 15, 20, 30, 40, 50, 75, 100, 150, 250, 500, 750, 1000]
+    lin = kernels["linear"]["best"]
+    rbf = kernels["rbf"]["best"]
+    pol = kernels["poly"]["best"]
 
-    best_score = 0
-    for C in C_list:
-        score = SVC(kernel="linear", C=C).fit(X_train, y_train).score(X_vali, y_vali)
-        if score > best_score:
-            best_score = score
-            best_params = {"C": C}
-    print("Linear")
-    print(f"  Best score: {best_score}")
-    print(f"  Best params: {best_params}")
+    plt.figure("Best models with decision boundary and data", figsize=(12, 7))
+    plt.subplot(1, 3, 1)
+    plt.gca().set_title(f"Linear\nC={lin.C}\nScore: {round(lin.score(X_vali, y_vali), 3)}")
+    plt.imshow(lin.predict(grid).reshape(xx.shape), origin="lower", extent=(x_min, x_max, y_min, y_max), cmap="Pastel2")
+    plt.scatter(X_train[:, 0], X_train[:, 1], c=y_train, marker=".", cmap="Dark2")
 
+    plt.subplot(1, 3, 2)
+    plt.gca().set_title(f"RBF\nC={rbf.C}, gamma={rbf.gamma}\nScore: {round(rbf.score(X_vali, y_vali), 3)}")
+    plt.imshow(rbf.predict(grid).reshape(xx.shape), origin="lower", extent=(x_min, x_max, y_min, y_max), cmap="Pastel2")
+    plt.scatter(X_train[:, 0], X_train[:, 1], c=y_train, marker=".", cmap="Dark2")
 
-    best_score = 0
-    for C in C_list:
-        for gamma in C_list:
-            score = SVC(kernel="rbf", C=C, gamma=gamma).fit(X_train, y_train).score(X_vali, y_vali)
-            # print(score)
-            if score > best_score:
-                best_score = score
-                best_params = {"C": C, "gamma": gamma}
-    print("RBF")
-    print(f"  Best score: {best_score}")
-    print(f"  Best params: {best_params}")
-
-
-    degrees = [1, 2, 3, 4, 5, 6]
-    best_score = 0
-    for d in degrees:
-        for C in C_list:
-            # for gamma in C_list:
-            score = SVC(kernel="poly", degree=d, C=C).fit(X_train, y_train).score(X_vali, y_vali)
-            if score > best_score:
-                best_score = score
-                best_params = {"C": C, "d": d}
-    print("Poly")
-    print(f"  Best score: {best_score}")
-    print(f"  Best params: {best_params}")
-
-
-
-
-
-    # x_min, x_max = min(X[:, 0]), max(X[:, 0])
-    # y_min, y_max = min(X[:, 1]), max(X[:, 1])
-    # xx, yy = np.meshgrid(np.linspace(x_min, x_max, 200), np.linspace(y_min, y_max, 200))
-    # grid = np.c_[xx.ravel(), yy.ravel()]
-    # z = poly.predict(grid)
-
-    # plt.contour(xx, yy, z.reshape(xx.shape), colors="orange", alpha=0.3)
-    # plt.scatter(X_train[y_train == 1, 0], X_train[y_train == 1, 1], marker=".")
-    # plt.scatter(X_train[y_train == 3, 0], X_train[y_train == 3, 1], marker=".")
-    # plt.scatter(X_train[y_train == 5, 0], X_train[y_train == 5, 1], marker=".")
-    # plt.scatter(X_train[y_train == 9, 0], X_train[y_train == 9, 1], marker=".")
-
+    plt.subplot(1, 3, 3)
+    plt.gca().set_title(f"Poly\nC={pol.C}, gamma={pol.gamma}, d={pol.degree}\nScore: {round(pol.score(X_vali, y_vali), 3)}")
+    plt.imshow(pol.predict(grid).reshape(xx.shape), origin="lower", extent=(x_min, x_max, y_min, y_max), cmap="Pastel2")
+    # plt.contour(xx, yy, pol.predict(grid).reshape(xx.shape))
+    plt.scatter(X_train[:, 0], X_train[:, 1], c=y_train, marker=".", cmap="Dark2")
     
-    # plt.show()
+    plt.show()
 
 if __name__ == "__main__":
     main()
