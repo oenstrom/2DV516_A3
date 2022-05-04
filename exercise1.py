@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from sklearn.svm import SVC
 
 def main():
-    """"""
+    """Main function to run when script is run."""
     data = np.loadtxt("A3_data/mnistsub.csv", delimiter=",")
     train_stop = round(data.shape[0]*0.8)
     X, y = data[:, :-1], data[:, -1]
