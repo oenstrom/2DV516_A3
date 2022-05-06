@@ -28,7 +28,7 @@ def main():
                         best_score = score
                         params["best"] = clf
 
-    margin = 1
+    margin = 0.5
     grid_size = 500
     x_min, x_max = min(X[:, 0]) - margin, max(X[:, 0]) + margin
     y_min, y_max = min(X[:, 1]) - margin, max(X[:, 1]) + margin
@@ -56,6 +56,7 @@ def main():
     # plt.contour(xx, yy, pol.predict(grid).reshape(xx.shape))
     plt.scatter(X_train[:, 0], X_train[:, 1], c=y_train, marker=".", cmap="Dark2")
     
+    plt.tight_layout()
     plt.show()
 
 if __name__ == "__main__":
