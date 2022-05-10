@@ -15,13 +15,7 @@ def read_saved_models():
     for x in next(os.walk("models"))[1]:
         saved_models.append(tf.keras.models.load_model(f"models/{x}"))
     return saved_models
-    #     _, acc = model.evaluate(X_test, y_test, verbose=0)
-    #     if acc > max_score[0]:
-    #         max_score = [acc, x]
-    #     print(f"{x}: {acc*100}%")
 
-    # print("------")
-    # print(max_score)
 
 def create_models(X_train, y_train):
     """Create one layer and two layer models."""
@@ -69,9 +63,20 @@ def main():
 
     # plot_16(X_train, y_train)
 
+    # Just run this if you really want to stare at nothing...
     # create_models(X_train, y_train)
 
-    # saved_models = read_saved_models()
+    saved_models = read_saved_models()
+
+    max_score = [0]
+    for model in saved_models:
+        _, acc = model.evaluate(X_val, y_val, verbose=0)
+        if acc > max_score[0]:
+            max_score = [acc, model]
+        print(f"{model}: {acc*100}%")
+
+    print("------")
+    print(max_score)
     exit()
 
 
