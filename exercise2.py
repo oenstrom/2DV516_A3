@@ -65,7 +65,7 @@ def main():
     plt.figure("Confusion matrices")
     ax1 = plt.subplot(1, 2, 1)
     ax1.title.set_text("Built in One-vs-One")
-    ax2 = plt.subplot(1, 2, 1)
+    ax2 = plt.subplot(1, 2, 2)
     ax2.title.set_text("Custom One-vs-All")
     ConfusionMatrixDisplay.from_estimator(rbf, X_test, y_test, labels=labels, ax=ax1)
     ConfusionMatrixDisplay.from_predictions(y_test, y_pred, labels=labels, ax=ax2)
