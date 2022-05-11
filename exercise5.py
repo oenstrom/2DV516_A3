@@ -9,40 +9,57 @@ import numpy as np
 import time
 import pandas as pd
 
+
+def create_models(X_train, y_train):
+    """Create two layer and three layer models."""
+    # Two layer models
+    for units in [50, 100, 200]:
+        for units2 in [50, 100, 200]:
+            for lr in [0.0001, 0.0005, 0.001]:
+                for l2 in [False, True]:
+                    model = models.Sequential()
+                    model.add(layers.InputLayer(input_shape=(28, 28, 1)))
+                    model.add(layers.Flatten())
+                    if l2:
+                        model.add(layers.Dense(units, activation="relu", kernel_regularizer="l2"))
+                        model.add(layers.Dense(units2, activation="relu", kernel_regularizer="l2"))
+                    else:
+                        model.add(layers.Dense(units, activation="relu"))
+                        model.add(layers.Dense(units2, activation="relu"))
+                    model.add(layers.Dense(10, activation="softmax"))
+                    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr), loss="categorical_crossentropy", metrics=["accuracy"])
+                    model.fit(X_train, y_train, epochs=10)
+                    model.save(f"saved_models/two_layers-{units}x{units2}_lr-{lr}_l2-{l2}")
+    
+    # Three layer models
+    for units in [50, 100, 200]:
+        for units2 in [50, 100, 200]:
+            for units3 in [50, 100, 200]:
+                for lr in [0.0001, 0.0005, 0.001]:
+                    for l2 in [False, True]:
+                        model = models.Sequential()
+                        model.add(layers.InputLayer(input_shape=(28, 28, 1)))
+                        model.add(layers.Flatten())
+                        if l2:
+                            model.add(layers.Dense(units, activation="relu", kernel_regularizer="l2"))
+                            model.add(layers.Dense(units2, activation="relu", kernel_regularizer="l2"))
+                            model.add(layers.Dense(units3, activation="relu", kernel_regularizer="l2"))
+                        else:
+                            model.add(layers.Dense(units, activation="relu"))
+                            model.add(layers.Dense(units2, activation="relu"))
+                            model.add(layers.Dense(units3, activation="relu"))
+                        model.add(layers.Dense(10, activation="softmax"))
+                        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr), loss="categorical_crossentropy", metrics=["accuracy"])
+                        model.fit(X_train, y_train, epochs=10)
+                        model.save(f"saved_models/three_layers-{units}x{units2}x{units3}_lr-{lr}_l2-{l2}")
+
+
 def read_saved_models():
     # max_score = [0]
     saved_models = []
     for x in next(os.walk("models"))[1]:
         saved_models.append(tf.keras.models.load_model(f"models/{x}"))
     return saved_models
-
-
-def create_models(X_train, y_train):
-    """Create one layer and two layer models."""
-    # One layer models
-    for units in [5, 10, 25, 50, 75, 100, 150, 200]:
-        model = models.Sequential()
-        model.add(layers.InputLayer(input_shape=(28, 28, 1)))
-        model.add(layers.Flatten())
-        model.add(layers.Dense(units, activation="relu"))
-        model.add(layers.Dense(10, activation="softmax"))
-        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0009), loss="categorical_crossentropy", metrics=["accuracy"])
-        model.fit(X_train, y_train, epochs=10)
-        model.save(f"models/one_layer_{units}_nodes")
-
-    # Two layer models
-    for units in [5, 10, 25, 50, 75, 100, 150, 200]:
-        for units2 in [5, 10, 25, 50, 75, 100, 150, 200]:
-            model = models.Sequential()
-            model.add(layers.InputLayer(input_shape=(28, 28, 1)))
-            model.add(layers.Flatten())
-            model.add(layers.Dense(units, activation="relu"))
-            model.add(layers.Dense(units2, activation="relu"))
-            model.add(layers.Dense(10, activation="softmax"))
-            model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0009), loss="categorical_crossentropy", metrics=["accuracy"])
-            model.fit(X_train, y_train, epochs=10)
-            model.save(f"models/two_layers_{units}_x_{units2}")
-
 
 def plot_16(X_train, y_train):
     for i, img_nr in enumerate(np.random.choice(X_train.shape[0], size=16, replace=False)):
@@ -63,20 +80,24 @@ def main():
 
     # plot_16(X_train, y_train)
 
-    # Just run this if you really want to stare at nothing...
+    # Just run this if you really want to stare at models being trained...
     # create_models(X_train, y_train)
 
     saved_models = read_saved_models()
+
 
     max_score = [0]
     for model in saved_models:
         _, acc = model.evaluate(X_val, y_val, verbose=0)
         if acc > max_score[0]:
             max_score = [acc, model]
-        print(f"{model}: {acc*100}%")
+        print(f"{model}: {acc*100} %")
 
     print("------")
     print(max_score)
+    _, acc = max_score[1].evaluate(X_test, y_test)
+    max_score[1].summary()
+    print(f"Score: {acc*100} %")
     exit()
 
 

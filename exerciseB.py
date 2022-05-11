@@ -12,7 +12,7 @@ X_test, y_test = data[:, 1:], data[:, 0]
 X_test = X_test / 255.0
 
 
-clf = MLPClassifier(solver="adam", activation="relu", learning_rate="adaptive", learning_rate_init=0.01, verbose=True, hidden_layer_sizes=[100, 100, 100], max_iter=20)
+clf = MLPClassifier(learning_rate_init=0.01, verbose=True, hidden_layer_sizes=[100, 100, 100])
 clf.fit(X_train, y_train)
 
 
