@@ -2,6 +2,21 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.svm import SVC
 
+def grid_search(kernels, X_train, y_train, X_val, y_val):
+    """Perform grid search on degree, C and gamma."""
+    for kernel, params in kernels.items():
+        best_score = 0
+        for degree in params.get("degree", [1]):
+            for C in params.get("C", [1]):
+                for gamma in params.get("gamma", [1]):
+                    clf = SVC(kernel=kernel, degree=degree, C=C, gamma=gamma)
+                    score = clf.fit(X_train, y_train).score(X_val, y_val)
+                    if score > best_score:
+                        best_score = score
+                        params["best"] = clf
+    return {key:kernels[key]["best"] for key in kernels.keys()}
+
+
 def main():
     """Main function to run when script is run."""
     data = np.loadtxt("A3_data/mnistsub.csv", delimiter=",")
@@ -10,24 +25,6 @@ def main():
     X_train, y_train = X[:train_stop, :], y[:train_stop]
     X_vali, y_vali = X[train_stop:, :], y[train_stop:]
 
-    kernels = {
-        "linear": {"C": [0.001, 0.01, 0.1, 1, 2, 3, 4, 5, 10, 50, 100, 200]},
-        "rbf": {"C": [0.001, 0.01, 0.1, 1, 2, 3, 4, 5, 10, 50, 100, 200], "gamma": [0.001, 0.01, 0.05, 0.075, 0.1, 0.5, 0.75, 1, 5, 10, 100]},
-        "poly": {"degree": [2, 3, 4, 5, 6], "C": [0.01, 0.1, 1, 10], "gamma": [0.01, 0.05, 0.075, 0.1]}
-    }
-
-    # Grid search
-    for kernel, params in kernels.items():
-        best_score = 0
-        for degree in params.get("degree", [1]):
-            for C in params.get("C", [1]):
-                for gamma in params.get("gamma", [1]):
-                    clf = SVC(kernel=kernel, degree=degree, C=C, gamma=gamma)
-                    score = clf.fit(X_train, y_train).score(X_vali, y_vali)
-                    if score > best_score:
-                        best_score = score
-                        params["best"] = clf
-
     margin = 0.5
     grid_size = 500
     x_min, x_max = min(X[:, 0]) - margin, max(X[:, 0]) + margin
@@ -35,9 +32,13 @@ def main():
     xx, yy = np.meshgrid(np.linspace(x_min, x_max, grid_size), np.linspace(y_min, y_max, grid_size))
     grid = np.c_[xx.ravel(), yy.ravel()]
 
-    lin = kernels["linear"]["best"]
-    rbf = kernels["rbf"]["best"]
-    pol = kernels["poly"]["best"]
+
+    kernels = {
+        "linear": {"C": [0.001, 0.01, 0.1, 1, 2, 3, 4, 5, 10, 50, 100, 200]},
+        "rbf": {"C": [0.001, 0.01, 0.1, 1, 2, 3, 4, 5, 10, 50, 100, 200], "gamma": [0.001, 0.01, 0.05, 0.075, 0.1, 0.5, 0.75, 1, 5, 10, 100]},
+        "poly": {"degree": [2, 3, 4, 5, 6], "C": [0.01, 0.1, 1, 10], "gamma": [0.01, 0.05, 0.075, 0.1]}
+    }
+    lin, rbf, pol = grid_search(kernels, X_train, y_train, X_vali, y_vali).values()
 
     plt.figure("Best models with decision boundary and data", figsize=(12, 7))
     plt.subplot(1, 3, 1)
