@@ -51,9 +51,9 @@ def main():
 
 
     print("a)")
-    print("  Ensemble est. gen. error:", round(accuracy_score(y_test, (ensemble_pred > (n_trees/2))) * 100, 2), "%")
+    print("  Ensemble est. gen. error:", round((1.0 - accuracy_score(y_test, (ensemble_pred > (n_trees/2)))) * 100, 2), "%")
     print("b)")
-    print("  Average est. gen. error:", round(sum_gen_error/n_trees * 100, 2), "%")
+    print("  Average est. gen. error:", round((1.0 - (sum_gen_error/n_trees)) * 100, 2), "%")
     print("c)")
     print("  See figures")
     print("d)")
