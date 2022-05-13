@@ -74,7 +74,7 @@ def plot_16(X_train, y_train, labels, size=16):
 def main():
     """Main function to run when the script is run."""
     data = np.array(pd.read_csv("A3_data/fashion-mnist_train.csv"))
-    np.random.seed(7)
+    # np.random.seed(7)
     np.random.shuffle(data)
     X_train, y_train = (data[:, 1:]/255.0).reshape(-1, 28, 28), tf.keras.utils.to_categorical(data[:, 0])
     data = np.array(pd.read_csv("A3_data/fashion-mnist_test.csv"))
